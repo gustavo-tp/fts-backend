@@ -1,4 +1,4 @@
-module.exports = process.env.DATABASE_URL || {
+module.exports = {
   dialect: 'postgres',
   host: process.env.PG_HOST,
   username: process.env.PG_USERNAME,
