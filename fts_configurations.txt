@@ -1,0 +1,46 @@
+CREATE EXTENSION unaccent;
+CREATE TEXT SEARCH CONFIGURATION pt ( COPY = portuguese );
+ALTER TEXT SEARCH CONFIGURATION pt
+        ALTER MAPPING FOR hword, hword_part, word
+        WITH unaccent, portuguese_stem;
+
+CREATE MATERIALIZED VIEW search_index AS
+SELECT
+	exemplarie.id,
+	exemplarie.title,
+	exemplarie.subtitle,
+	author.name as author,
+	content_type.name as content_type,
+	exemplarie.edition,
+	publisher.name as publisher,
+   	setweight(to_tsvector('pt', exemplarie.title), 'A') ||
+   	setweight(to_tsvector('pt', exemplarie.subtitle ), 'B') ||
+   	setweight(to_tsvector('pt', exemplarie.subject ), 'B') ||
+   	setweight(to_tsvector('simple', author.name), 'C') ||
+   	setweight(to_tsvector('simple', content_type.name), 'D') ||
+   	setweight(to_tsvector('simple', exemplarie.edition ), 'D') ||
+   	setweight(to_tsvector('simple', publisher.name), 'C') as document
+FROM exemplaries as exemplarie
+JOIN authors as author ON author.id = exemplarie.author_id
+JOIN content_types as content_type ON content_type.id = exemplarie.content_type_id
+JOIN publishers as publisher ON publisher.id = exemplarie.publisher_id;
+
+CREATE INDEX idx_fts_search ON search_index USING gin(document);
+
+
+// -------------------------------------------------------------------------
+
+
+CREATE MATERIALIZED VIEW exemplaries_view AS
+select
+	exemplarie.id,
+	exemplarie.title,
+	exemplarie.subtitle,
+	author.name as author,
+	content_type.name as content_type,
+	exemplarie.edition,
+	publisher.name as publisher
+FROM exemplaries as exemplarie
+JOIN authors as author ON author.id = exemplarie.author_id
+JOIN content_types as content_type ON content_type.id = exemplarie.content_type_id
+JOIN publishers as publisher ON publisher.id = exemplarie.publisher_id;

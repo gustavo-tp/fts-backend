@@ -1,0 +1,25 @@
+INSERT INTO authors (name) SELECT DISTINCT autor FROM exemplares_acervos;
+INSERT INTO content_types (name) SELECT DISTINCT tipo_material FROM exemplares_acervos;
+INSERT INTO publishers (name) SELECT DISTINCT editora FROM exemplares_acervos;
+
+INSERT INTO authors (name) VALUES ('Unknown Author');
+INSERT INTO publishers (name) VALUES ('Unknown Publisher');
+
+CREATE INDEX ON exemplares_acervos ((lower(autor)));
+CREATE INDEX ON exemplares_acervos ((lower(editora)));
+CREATE INDEX ON exemplares_acervos ((lower(tipo_material)));
+
+INSERT INTO exemplaries (title, subtitle, subject, author_id, content_type_id, amount, year, edition, publisher_id, isbn, issn)
+SELECT
+    titulo,
+    sub_titulo,
+    assunto,
+    COALESCE((SELECT id FROM authors WHERE LOWER(name) = LOWER(autor) LIMIT 1), (SELECT MAX(id) FROM authors)),
+    (SELECT id FROM content_types WHERE LOWER(name) = LOWER(tipo_material)),
+    CAST(quantidade AS INTEGER),
+    ano,
+    edicao,
+    COALESCE((SELECT id FROM publishers WHERE LOWER(name) = LOWER(editora)  LIMIT 1), (SELECT MAX(id) FROM publishers)),
+    isbn,
+    issn 
+ FROM exemplares_acervos;

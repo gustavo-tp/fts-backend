@@ -1,0 +1,7 @@
+node_modules/
+uploads/*
+!uploads/.gitkeep
+*.json
+!package.json
+*.csv
+.env
